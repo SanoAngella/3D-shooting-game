@@ -29,7 +29,7 @@ class ObjectRenderer:
         self.screen.blit(self.game_over_image, (0, 0))
 
     def draw_player_health(self):
-        health = str(self.game.player.health)
+        health = str(max(0, self.game.player.health))
         for i, char in enumerate(health):
             self.screen.blit(self.digits[char], (i * self.digit_size, 0))
         self.screen.blit(self.digits['10'], ((i + 1) * self.digit_size, 0))
@@ -55,13 +55,14 @@ class ObjectRenderer:
         return pg.transform.scale(texture, res)
 
     def load_wall_textures(self):
-        return {
+        textures = {
             1: self.get_texture('resources/textures/1.png'),
             2: self.get_texture('resources/textures/2.png'),
             3: self.get_texture('resources/textures/3.png'),
             4: self.get_texture('resources/textures/4.png'),
             5: self.get_texture('resources/textures/5.png'),
-            6: self.get_texture('resources/textures/6.png'),
-            8: self.get_texture('resources/textures/8.png'),
-            9: self.get_texture('resources/textures/9.png'),
         }
+        textures[6] = textures[2]
+        textures[8] = textures[1]
+        textures[9] = textures[3]
+        return textures

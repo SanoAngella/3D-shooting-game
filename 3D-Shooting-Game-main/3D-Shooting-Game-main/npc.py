@@ -210,7 +210,7 @@ class CyberDemonNPC(NPC):
         self.accuracy = 0.19
 
 class Skull(NPC):
-    def __init__(self, game, path='resources/sprites/npc/skull/0.png', pos=(10.5, 5.4),
+    def __init__(self, game, path='resources/sprites/npc/caco_demon/0.png', pos=(10.5, 5.4),
                  scale=0.5, shift=0.37, animation_time=220):
         super().__init__(game, path, pos, scale, shift, animation_time)
         self.attack_dist = 3

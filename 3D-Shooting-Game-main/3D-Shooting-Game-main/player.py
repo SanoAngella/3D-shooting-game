@@ -40,11 +40,12 @@ class Player:
         self.check_game_over()
 
     def single_fire_event(self, event):
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if event.button == 1 and not self.shot and not self.game.weapon.reloading:
-                self.game.sound.shotgun.play()
-                self.shot = True
-                self.game.weapon.reloading = True
+        is_left_click = event.type == pg.MOUSEBUTTONDOWN and event.button == 1
+        is_spacebar = event.type == pg.KEYDOWN and event.key == pg.K_SPACE
+        if (is_left_click or is_spacebar) and not self.shot and not self.game.weapon.reloading:
+            self.game.sound.shotgun.play()
+            self.shot = True
+            self.game.weapon.reloading = True
 
     def movement(self):
         sin_a = math.sin(self.angle)
