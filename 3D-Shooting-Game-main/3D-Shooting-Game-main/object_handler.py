@@ -1,5 +1,6 @@
 from sprite_object import *
 from npc import *
+from coin import Coin
 from random import choices, randrange
 
 
@@ -8,12 +9,18 @@ class ObjectHandler:
         self.game = game
         self.sprite_list = []
         self.npc_list = []
+        self.coin_list = []
         self.npc_sprite_path = 'resources/sprites/npc/'
         self.static_sprite_path = 'resources/sprites/static_sprites/'
         self.anim_sprite_path = 'resources/sprites/animated_sprites/'
         add_sprite = self.add_sprite
         add_npc = self.add_npc
         self.npc_positions = {}
+
+        # initial bonus coins
+        self.spawn_coin(2.5, 4.0)
+        self.spawn_coin(3.5, 3.5)
+        self.spawn_coin(5.5, 6.5)
 
         # spawn npc
         self.enemies = 50 # npc count
@@ -75,7 +82,14 @@ class ObjectHandler:
         self.npc_positions = {npc.map_pos for npc in self.npc_list if npc.alive}
         [sprite.update() for sprite in self.sprite_list]
         [npc.update() for npc in self.npc_list]
+        for coin in self.coin_list[:]:
+            coin.update()
+            if coin.is_collected:
+                self.coin_list.remove(coin)
         self.check_win()
+
+    def spawn_coin(self, x, y):
+        self.coin_list.append(Coin(self.game, pos=(x, y)))
 
     def add_npc(self, npc):
         self.npc_list.append(npc)

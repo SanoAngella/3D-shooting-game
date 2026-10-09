@@ -15,6 +15,17 @@ class Player:
         self.time_prev = pg.time.get_ticks()
         # diagonal movement correction
         self.diag_move_corr = 1 / math.sqrt(2)
+        # coin pickup & heal tracking
+        self.coins = 0
+        self.heal_notification = 0
+        self.heal_flash = 0
+
+    def add_coin(self, amount=1, heal=150):
+        self.coins += amount
+        self.health = min(PLAYER_MAX_HEALTH, self.health + heal)
+        now = pg.time.get_ticks()
+        self.heal_notification = now + 1500
+        self.heal_flash = now + 200
 
     def recover_health(self):
         if self.check_health_recovery_delay() and self.health < PLAYER_MAX_HEALTH:
@@ -38,6 +49,12 @@ class Player:
         self.game.object_renderer.player_damage()
         self.game.sound.player_pain.play()
         self.check_game_over()
+
+    def check_joystick_fire(self):
+        if self.game.joystick.check_shoot_trigger() and not self.shot and not self.game.weapon.reloading:
+            self.game.sound.shotgun.play()
+            self.shot = True
+            self.game.weapon.reloading = True
 
     def single_fire_event(self, event):
         is_left_click = event.type == pg.MOUSEBUTTONDOWN and event.button == 1
@@ -79,6 +96,13 @@ class Player:
             dx *= self.diag_move_corr
             dy *= self.diag_move_corr
 
+        # Joystick analog movement
+        if hasattr(self.game, 'joystick'):
+            joy_x, joy_y = self.game.joystick.get_movement()
+            if joy_x != 0 or joy_y != 0:
+                dx += (speed_cos * joy_y - speed_sin * joy_x)
+                dy += (speed_sin * joy_y + speed_cos * joy_x)
+
         self.check_wall_collision(dx, dy)
 
         # if keys[pg.K_LEFT]:
@@ -88,13 +112,18 @@ class Player:
         self.angle %= math.tau
 
     def check_wall(self, x, y):
+        # Prevent leaving map boundaries into void
+        if not (0 <= x < self.game.map.cols and 0 <= y < self.game.map.rows):
+            return False
         return (x, y) not in self.game.map.world_map
 
     def check_wall_collision(self, dx, dy):
-        scale = PLAYER_SIZE_SCALE / self.game.delta_time
-        if self.check_wall(int(self.x + dx * scale), int(self.y)):
+        # Robust collision with fixed player radius margin to prevent tunneling on lag spikes
+        margin_x = 0.25 if dx > 0 else (-0.25 if dx < 0 else 0)
+        margin_y = 0.25 if dy > 0 else (-0.25 if dy < 0 else 0)
+        if self.check_wall(int(self.x + dx + margin_x), int(self.y)):
             self.x += dx
-        if self.check_wall(int(self.x), int(self.y + dy * scale)):
+        if self.check_wall(int(self.x), int(self.y + dy + margin_y)):
             self.y += dy
 
     def draw(self):
@@ -111,7 +140,14 @@ class Player:
         self.rel = max(-MOUSE_MAX_REL, min(MOUSE_MAX_REL, self.rel))
         self.angle += self.rel * MOUSE_SENSITIVITY * self.game.delta_time
 
+        # Joystick camera rotation
+        if hasattr(self.game, 'joystick'):
+            joy_look = self.game.joystick.get_look()
+            if joy_look != 0:
+                self.angle += joy_look * PLAYER_ROT_SPEED * 1.5 * self.game.delta_time
+
     def update(self):
+        self.check_joystick_fire()
         self.movement()
         self.mouse_control()
         self.recover_health()

@@ -23,6 +23,7 @@ class NPC(AnimatedSprite):
         self.ray_cast_value = False
         self.frame_counter = 0
         self.player_search_trigger = False
+        self.dropped_coin = False
 
     def update(self):
         self.check_animation_time()
@@ -81,6 +82,9 @@ class NPC(AnimatedSprite):
         if self.health < 1:
             self.alive = False
             self.game.sound.npc_death.play()
+            if not self.dropped_coin:
+                self.dropped_coin = True
+                self.game.object_handler.spawn_coin(self.x, self.y)
 
     def run_logic(self):
         if self.alive:
